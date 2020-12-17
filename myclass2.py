@@ -9,9 +9,7 @@ import re
 import pandas as pd
 from bs4 import BeautifulSoup
 
-class Rowtext(object):
-    
-    
+class Rawtext(object):
     def location(self,rowtext):
         #para:urlopentext
         #return:dic with locationset
@@ -28,7 +26,7 @@ class Rowtext(object):
             if doc_type == '10-K':
                 dictionary[doc_type] = rowtext[doc_start:doc_end]
         if '10-K' not in dictionary.keys():
-            raise AssertionError
+            raise AssertionError# for NT 10-K
         return dictionary
     
     
@@ -39,20 +37,22 @@ class Rowtext(object):
         goal="|".join(x)#list to str
         regex = re.compile(r'(>(Item|ITEM)(\s|&#160;|&nbsp;)('+goal+')\.{0,1})')
         matches = regex.finditer(dictionary['10-K'])
-        test_df_0 = pd.DataFrame([(x.group(), x.start(), x.end()) for x in matches],columns=['item', 'start', 'end'])
-        test_df=test_df_0.copy()
-        test_df['item'] = test_df.item.str.lower()
+        df_0 = pd.DataFrame([(x.group(), x.start(), x.end()) for x in matches],
+                            columns=['item', 'start', 'end'])
+        df=df_0.copy()
+        df['item'] = df.item.str.lower()
         # standarize
         
-        test_df.replace('&#160;','',regex=True,inplace=True)
-        test_df.replace('&nbsp;','',regex=True,inplace=True)
-        test_df.replace('\n','',regex=False,inplace=True)
-        test_df.replace(' ','',regex=True,inplace=True)
-        test_df.replace('\.','',regex=True,inplace=True)
-        test_df.replace('>','',regex=True,inplace=True)
-        test_df = test_df.sort_values('start', ascending=True).drop_duplicates(subset=['item'], keep='last')
+        df.replace('&#160;','',regex=True,inplace=True)
+        df.replace('&nbsp;','',regex=True,inplace=True)
+        df.replace('\n','',regex=False,inplace=True)
+        df.replace(' ','',regex=True,inplace=True)
+        df.replace('\.','',regex=True,inplace=True)
+        df.replace('>','',regex=True,inplace=True)
+        table = df.sort_values('start', ascending=True).drop_duplicates(
+            subset=['item'], keep='last')
         # Drop duplicates
-        return test_df
+        return table
         
         
     def writedown(text,savewd):#text for write,wd for save
@@ -63,7 +63,7 @@ class Rowtext(object):
         try:
             assert len(clean_text)>100
             #too short items deleted          
-            with open(savewd,'w',encoding='utf-8') as wooh:
-                    wooh.write(clean_text+'\n')
+            with open(savewd,'a',encoding='utf-8') as woohoo:
+                    woohoo.write(clean_text+'\n')
         except:
             raise AssertionError
